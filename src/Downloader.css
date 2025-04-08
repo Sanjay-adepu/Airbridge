@@ -1,0 +1,95 @@
+/* Downloader.css */
+.downloader-container {
+  padding: 20px;
+  max-width: 500px;
+  margin: 40px auto;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  margin-top:20%;
+}
+
+.title {
+  font-size: 24px;
+  color: #333;
+}
+
+.description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.input-box {
+  padding: 10px;
+  width: 100%;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.download-btn,
+.scan-btn {
+  flex: 1 1 120px;
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  min-width: 120px;
+}
+
+.download-btn {
+  background-color: #007BFF;
+  color: white;
+}
+
+.download-btn:hover {
+  background-color: #0056b3;
+}
+
+.scan-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.scan-btn:hover {
+  background-color: #1e7e34;
+}
+
+.scanner-wrapper {
+  margin-top: 20px;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 600px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .download-btn,
+  .scan-btn {
+    font-size: 13px;
+    padding: 10px;
+  }
+  .downloader-container {
+    margin-top:100px;
+  }
+}

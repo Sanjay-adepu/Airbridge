@@ -1,0 +1,115 @@
+/* Home.css */
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+
+:root {
+  --primary-color: #2d58f9fc;
+  --primary-hover: #355df2fc;
+  --text-color: #333;
+  --background: #ffffff;
+  --border-radius: 12px;
+  --transition-speed: 0.3s;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background);
+  color: var(--text-color);
+}
+
+.home-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: var(--background);
+  
+  border-radius: var(--border-radius);
+  box-sizing: border-box;
+  margin-top:14%;
+}
+
+.home-container h1 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  font-size: 32px;
+}
+
+.note {
+  background-color: #f4f6ff;
+  border-left: 5px solid var(--primary-color);
+  padding: 15px 20px;
+  border-radius: var(--border-radius);
+  margin-bottom: 25px;
+  font-size: 15px;
+}
+
+.description p {
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 25px;
+}
+
+.description h2 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.description ul {
+  padding-left: 20px;
+  margin-bottom: 30px;
+}
+
+.description ul li {
+  margin-bottom: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top:20px;
+}
+
+.home-button {
+  padding: 12px 24px;
+  background-color: #2e9e67e0;
+  color: white;
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  transition: background-color var(--transition-speed);
+  font-size: 16px;
+}
+
+.home-button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .home-container {
+    padding: 20px;
+    margin-top:100px;
+  }
+    .home-container h1{
+      font-size:22px;
+    }
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top:0px !important;
+}
+  .home-button {
+    width: 100%;
+    text-align: center;
+  }
+}
