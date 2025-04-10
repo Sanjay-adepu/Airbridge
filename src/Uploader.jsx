@@ -12,6 +12,7 @@ const UploadInterface = () => {
   const [link, setLink] = useState('');
   const [code, setCode] = useState('');
   const [qrImage, setQrImage] = useState('');
+  const [responseData, setResponseData] = useState(null);
 
   const handleSubmit = async () => {
     if (!sessionId.trim()) {
@@ -40,6 +41,7 @@ const UploadInterface = () => {
       });
 
       setCode(response.data.code);
+      setResponseData(response.data);
 
       const qrRes = await axios.get(`https://airbridge-backend.onrender.com/qrcode/${response.data.code}`);
       setQrImage(qrRes.data.qr);
@@ -164,19 +166,41 @@ const UploadInterface = () => {
           <div className="result-container">
             <h3>Generated Code:</h3>
             <p>{code}</p>
-            <a
-              href={`https://airbridge-backend.onrender.com/download/${code}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="download-link"
-            >
-              Download Files
-            </a>
+
             {qrImage && (
               <div className="qr-preview">
                 <h4>QR Code:</h4>
                 <img src={qrImage} alt="QR Code" />
               </div>
+            )}
+
+            {responseData?.directLinks?.length > 0 ? (
+              <div>
+                <h4>Download Files:</h4>
+                <ul>
+                  {responseData.directLinks.map((link, index) => (
+                    <li key={index}>
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="download-link"
+                      >
+                        File {index + 1}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <a
+                href={`https://airbridge-backend.onrender.com/download/${code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="download-link"
+              >
+                Download ZIP
+              </a>
             )}
           </div>
         )}
