@@ -33,10 +33,10 @@ formData.append('link', link);
 
 try {
 const response = await axios.post('https://airbridge-backend.onrender.com/upload', formData, {
-headers: {
-'Content-Type': 'multipart/form-data',
-'x-session-id': sessionId
-}
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    'x-session-id': sessionId
+  }
 });
 
 setCode(response.data.code);
