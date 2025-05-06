@@ -34,7 +34,7 @@ const UploadInterface = () => {
     }  
   
     try {  
-      const response = await axios.post('https://airbridge-backend.onrender.com/upload', formData, {  
+      const response = await axios.post('https://airbridge-backend.vercel.app/upload', formData, {  
         headers: {  
           'Content-Type': 'multipart/form-data',  
           'x-session-id': sessionId  
@@ -43,7 +43,7 @@ const UploadInterface = () => {
   
       setCode(response.data.code);  
   
-      const qrRes = await axios.get(`https://airbridge-backend.onrender.com/qrcode/${response.data.code}`);  
+      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);  
       setQrImage(qrRes.data.qr);  
     } catch (error) {  
       console.error('Upload error:', error);  
