@@ -42,7 +42,7 @@ const Downloader = () => {
       const extracted = result.split('/').pop();
       setCode(extracted);
       setShowScanner(false);
-      window.open(`https://airbridge-backend.onrender.com/download/${extracted}`, '_blank');
+      window.open(`https://airbridge-backend.vercel.app/download/${extracted}`, '_blank');
     }} />
   </div>
 )}
