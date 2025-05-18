@@ -3,6 +3,7 @@ import Uploader from './Uploader';
 import {Route,Routes} from "react-router-dom";
 import Home from "./Home/Home.jsx";
 import Downloader from "./Downloader.jsx";
+import Video from "./VideoUpload.jsx";
 function App() {
   return (
     <div>
@@ -11,7 +12,8 @@ function App() {
         <Route path="/download" element={<Downloader/>}/>
         <Route path="/upload" element={<Uploader/>}/>
      <Route path="/" element={<Home/>}/>
-        
+     <Route path="/upload" element={<Video/>}/>
+      
       </Routes>
   
     </div>
