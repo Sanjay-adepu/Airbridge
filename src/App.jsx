@@ -12,7 +12,7 @@ function App() {
         <Route path="/download" element={<Downloader/>}/>
         <Route path="/upload" element={<Uploader/>}/>
      <Route path="/" element={<Home/>}/>
-     <Route path="/upload" element={<Video/>}/>
+     <Route path="/upload1" element={<Video/>}/>
       
       </Routes>
   
