@@ -1,171 +1,151 @@
-/* Navbar Styles */
-.navbar {
-  background-color: white;
-
-  padding: 15px 20px;
+/* Main Navbar Container */
+.nav-container {
+  background-color: #ffffff;
   position: fixed;
-  width: 100%;
   top: 0;
   left: 0;
+  width: 100%;
   z-index: 1000;
+border-bottom:1px solid #bfbbbbb1;
 }
 
-.navbar-container {
+.firebrik-text {
+  font-family: 'Orbitron', sans-serif; /* Futuristic font */
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ff4224b1 0%, #ff4224b1 40%, #666 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    1px 1px 2px rgba(0,0,0,0.2),
+    -1px -1px 2px rgba(255,255,255,0.1);
+}
+
+
+
+
+/* Inner Flex Layout */
+.nav-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 /* Logo */
-.navbar-logo {
+.nav-logo {
   display: flex;
   align-items: center;
   text-decoration: none;
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-
+  color: #111;
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.logo-img {
-  width: 50px;
-  height: 50px;
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
   margin-right: 10px;
-  border-radius:50%;
-  border:#1e9bfccd 1px soild;
+  border-radius: 8px;
 }
 
-/* Sidebar Navigation */
-.sidebar {
+/* Desktop Nav Links */
+.nav-links-desktop {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.nav-links-desktop li a {
+  text-decoration: none;
+  color: #222;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links-desktop li a:hover {
+  color: #000;
+}
+
+/* Mobile Sidebar */
+.nav-sidebar {
   position: fixed;
   top: 0;
-  left: -50%; /* Initially hidden */
-  width: 50%;
+  left: -100%;
+  width: 80%;
   height: 100vh;
   background-color: white;
+  transition: left 0.3s ease;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: left 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  padding-top: 60px;
+  padding-top: 70px;
 }
 
-.sidebar.open {
-  left: 0; /* Slide in from left */
+.nav-sidebar.open {
+  left: 0;
 }
 
-.nav-links {
+.nav-links-mobile {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
-.nav-links li {
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-}
-
-.nav-links a {
+.nav-links-mobile li a {
+  display: block;
+  padding: 16px 24px;
   text-decoration: none;
-  color: #333;
+  color: #222;
   font-size: 16px;
   font-weight: 500;
-  display: block;
-  padding: 10px 20px;
-  transition: 0.3s;
+  border-bottom: 1px solid #eee;
 }
 
-.nav-links a:hover {
-  background-color: #157cf6cd;
+.nav-links-mobile li a:hover {
+  background-color: #f9f9f9;
 }
 
-/* Hamburger Menu (Mobile) */
-.hamburger-menu {
+/* Toggle Button */
+.nav-toggle-btn {
   display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-right:10%;
-}
-
-.bar {
-  width: 30px;
-  height: 3px;
-  background-color: #014f99e0 !important;
-  margin: 5px 0;
-  transition: 0.4s;
-}
-.hamburger-menu {
-  display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 36px;
-  height: 22px;
+  width: 30px;
+  height: 20px;
   background: none;
   border: none;
   cursor: pointer;
-  position: relative;
-  z-index: 100;
+  z-index: 1100;
 }
 
-.bar {
-  width: 100%;
+.nav-toggle-bar {
   height: 3px;
-  background-color: #157cf6cd;
-  transition: all 0.3s ease-in-out;
+  background-color: #111 !important;
+  border-radius: 2px;
+  transition: all 0.3s ease;
 }
 
-/* Transform bars into an "X" when menu is open */
-.hamburger-menu.open .bar:nth-child(1) {
-  transform: translateY(10px) rotate(45deg);
+/* Toggle Animation */
+.nav-toggle-btn.open .nav-toggle-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
 }
 
-.hamburger-menu.open .bar:nth-child(2) {
+.nav-toggle-btn.open .nav-toggle-bar:nth-child(2) {
   opacity: 0;
 }
 
-.hamburger-menu.open .bar:nth-child(3) {
-  transform: translateY(-10px) rotate(-45deg);
+.nav-toggle-btn.open .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
-  .hamburger-menu {
-    display: block;
-  }
-
-  .sidebar {
+  .nav-toggle-btn {
     display: flex;
   }
-}
-/* Desktop Navigation */
-.nav-links-desktop {
-  list-style: none;
-  display: flex;
-  gap: 20px;
-}
 
-.nav-links-desktop li {
-  padding: 10px;
-}
-
-.nav-links-desktop a {
-  text-decoration: none;
-  color: #333;
-  font-size: 16px;
-  font-weight: 500;
-  transition: 0.3s;
-}
-
-.nav-links-desktop a:hover {
-  color: #157cf6cd;
-}
-
-/* Hide Desktop Nav Links on Mobile */
-@media (max-width: 768px) {
   .nav-links-desktop {
     display: none;
   }
