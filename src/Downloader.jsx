@@ -8,7 +8,7 @@ const Downloader = () => {
 
   const handleDownload = () => {
     if (!code) return alert("Please enter or scan a code");
-    window.open(`https://airbridge-backend.onrender.com/download/${code}`, '_blank');
+    window.open(`https://airbridge-backend.vercel.app/download/${code}`, '_blank');
   };
 
   return (
