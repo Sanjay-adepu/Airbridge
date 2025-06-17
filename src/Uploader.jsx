@@ -15,11 +15,6 @@ const UploadInterface = () => {
   const [code, setCode] = useState('');  
   const [qrImage, setQrImage] = useState('');  
   
-  const handleSubmit = async () => {  
-    if (!sessionId.trim()) {  
-      alert("Please enter a session ID.");  
-      return;  
-    }  
   
     const formData = new FormData();  
     if (selectedType === 'files') {  
