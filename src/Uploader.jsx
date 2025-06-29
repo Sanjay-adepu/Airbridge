@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
-import axios from 'axios';
+
+const UPLOADTHING_APP_ID = 'rg07gnkko6';
 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
@@ -28,7 +30,7 @@ const UploadInterface = () => {
               size: f.size,
               type: f.type,
             })),
-            appId: 'rg07gnkko6',
+            appId: UPLOADTHING_APP_ID,
             route: 'fileUploader',
           }),
         });
@@ -67,20 +69,11 @@ const UploadInterface = () => {
       <div className="upload-container">
         <div className="instructions">
           <h2>How to Upload</h2>
-          <p>
-            1. Select type: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
-            2. Provide input, click <strong>Submit</strong>.
-          </p>
-          <p className="file-info">
-            <strong>File Info:</strong><br />
-            - Multiple or folder upload<br />
-            - Types: Images, PDFs, MP4, APKs, etc.
-          </p>
-          <hr />
+          <p>1. Select Files / Text / Link → Provide input → Submit.</p>
         </div>
 
         <div className="option-container">
-          {['files', 'text', 'link'].map((type) => (
+          {['files', 'text', 'link'].map(type => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -114,7 +107,6 @@ const UploadInterface = () => {
                   Select Folder
                 </label>
               </div>
-
               <input
                 type="file"
                 multiple
@@ -146,9 +138,7 @@ const UploadInterface = () => {
           )}
         </div>
 
-        <button onClick={handleSubmit} className="submit-btn">
-          Submit
-        </button>
+        <button onClick={handleSubmit} className="submit-btn">Submit</button>
 
         {code && (
           <div className="result-container">
