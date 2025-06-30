@@ -3,7 +3,7 @@ import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
-
+ 
 // ✅ Supabase credentials
 const supabase = createClient(
   'https://ahqwlfgoxmepucldmpyc.supabase.co',
