@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
+import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 
-const UPLOADTHING_APP_ID = 'rg07gnkko6';
+// ✅ Supabase credentials
+const supabase = createClient(
+  'https://ahqwlfgoxmepucldmpyc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocXdsZmdveG1lcHVjbGRtcHljIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTE3MDQ4OCwiZXhwIjoyMDY2NzQ2NDg4fQ.5jRexF8EgyBcg4kv5Z7mgypOeE3NPcVVskN7_LcTQL4'
+);
 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
@@ -15,51 +20,61 @@ const UploadInterface = () => {
   const [qrImage, setQrImage] = useState('');
 
   const handleSubmit = async () => {
-    try {
-      let uploadedUrls = [];
+    if (selectedType === 'files') {
+      if (files.length === 0) return alert("Please select at least one file.");
 
-      if (selectedType === 'files') {
-        if (files.length === 0) return alert("Please select at least one file.");
+      try {
+        const uploadedFiles = [];
 
-        const res = await fetch('https://uploadthing.com/api/uploadFiles', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            files: files.map(f => ({
-              name: f.name,
-              size: f.size,
-              type: f.type,
-            })),
-            appId: UPLOADTHING_APP_ID,
-            route: 'fileUploader',
-          }),
+        for (const file of files) {
+          const path = `uploads/${Date.now()}-${file.name}`;
+          const { error } = await supabase.storage
+            .from('uploads')
+            .upload(path, file, {
+              cacheControl: '3600',
+              contentType: file.type,
+              upsert: true,
+            });
+
+          if (error) throw error;
+
+          const { data } = supabase.storage.from('uploads').getPublicUrl(path);
+          uploadedFiles.push({ name: file.name, type: file.type, url: data.publicUrl });
+        }
+
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: uploadedFiles,
+          text: '',
+          link: '',
         });
 
-        const { urls } = await res.json();
+        setCode(response.data.code);
 
-        for (let i = 0; i < files.length; i++) {
-          await fetch(urls[i].url, {
-            method: 'PUT',
-            headers: { 'Content-Type': files[i].type },
-            body: files[i],
-          });
-          uploadedUrls.push(urls[i].url.split('?')[0]);
-        }
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        setQrImage(qrRes.data.qr);
+
+      } catch (err) {
+        console.error('Upload failed:', err);
+        alert('Upload failed');
       }
+    } else {
+      // Upload text or link
+      try {
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: [],
+          text,
+          link,
+        });
 
-      const backendRes = await axios.post('https://airbridge-backend.vercel.app/upload', {
-        uploadedUrls,
-        text,
-        link,
-      });
+        setCode(response.data.code);
 
-      setCode(backendRes.data.code);
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        setQrImage(qrRes.data.qr);
 
-      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${backendRes.data.code}`);
-      setQrImage(qrRes.data.qr);
-    } catch (err) {
-      console.error('Upload error:', err);
-      alert("Upload failed.");
+      } catch (err) {
+        console.error('Text/Link upload failed:', err);
+        alert("Upload failed");
+      }
     }
   };
 
@@ -69,11 +84,20 @@ const UploadInterface = () => {
       <div className="upload-container">
         <div className="instructions">
           <h2>How to Upload</h2>
-          <p>1. Select Files / Text / Link → Provide input → Submit.</p>
+          <p>
+            1. Select the type of data you want to upload: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
+            2. Based on your selection, provide the required input and click <strong>Submit</strong>.
+          </p>
+          <p className="file-info">
+            <strong>File Upload Info:</strong><br />
+            - You can select <strong>multiple files</strong> or an entire <strong>folder</strong>.<br />
+            - Supported types: <strong>Images, PDFs, PPTs, Word Docs, MP3s, MP4s, APKs</strong>, and more.
+          </p>
+          <hr />
         </div>
 
         <div className="option-container">
-          {['files', 'text', 'link'].map(type => (
+          {['files', 'text', 'link'].map((type) => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -107,6 +131,7 @@ const UploadInterface = () => {
                   Select Folder
                 </label>
               </div>
+
               <input
                 type="file"
                 multiple
@@ -138,7 +163,9 @@ const UploadInterface = () => {
           )}
         </div>
 
-        <button onClick={handleSubmit} className="submit-btn">Submit</button>
+        <button onClick={handleSubmit} className="submit-btn">
+          Submit
+        </button>
 
         {code && (
           <div className="result-container">
