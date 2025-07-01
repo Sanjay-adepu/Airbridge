@@ -28,54 +28,107 @@ const UploadInterface = () => {
   const [code, setCode] = useState('');
   const [qrImage, setQrImage] = useState('');
 
-  const handleSubmit = async () => {
-    if (selectedType === 'files') {
-      if (files.length === 0) return alert("Please select at least one file.");
+  
+const handleSubmit = async () => {
+  console.log(`[START] Upload triggered - Type: ${selectedType}`);
 
-      try {
-        const uploadedFiles = [];
+  if (selectedType === 'files') {
+    if (files.length === 0) {
+      alert("❗ Please select at least one file.");
+      console.warn("No files selected.");
+      return;
+    }
 
-        for (const file of files) {
+    try {
+      const uploadedFiles = [];
+
+      for (const file of files) {
+        try {
           const path = `uploads/${Date.now()}-${file.name}`;
           const fileRef = ref(storage, path);
+
+          console.log(`[UPLOAD] Uploading file: ${file.name} → ${path}`);
           await uploadBytes(fileRef, file);
           const url = await getDownloadURL(fileRef);
+          console.log(`[UPLOAD SUCCESS] ${file.name} uploaded. URL: ${url}`);
+
           uploadedFiles.push({ name: file.name, type: file.type, url });
+        } catch (uploadErr) {
+          console.error(`[ERROR] Firebase upload failed for ${file.name}`, uploadErr);
+          alert(`Upload failed for file: ${file.name}`);
+          return;
         }
-
-        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-          files: uploadedFiles,
-          text: '',
-          link: '',
-        });
-
-        setCode(response.data.code);
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
-        setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Upload failed:', err);
-        alert('Upload failed');
       }
 
-    } else {
+      console.log("[BACKEND] Sending uploaded file URLs to backend...");
+      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+        files: uploadedFiles,
+        text: '',
+        link: '',
+      });
+
+      if (!response.data.code) {
+        console.error("[ERROR] Backend did not return a code");
+        alert("Upload failed: No code received from server");
+        return;
+      }
+
+      setCode(response.data.code);
+      console.log(`[SUCCESS] Upload complete. Code: ${response.data.code}`);
+
       try {
-        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-          files: [],
-          text,
-          link,
-        });
-
-        setCode(response.data.code);
+        console.log("[QR] Generating QR code...");
         const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
         setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Text/Link upload failed:', err);
-        alert("Upload failed");
+        console.log("[QR SUCCESS] QR code generated.");
+      } catch (qrErr) {
+        console.error("[ERROR] QR generation failed", qrErr);
+        alert("QR code generation failed.");
       }
+
+    } catch (err) {
+      console.error('[ERROR] Overall file upload failed:', err);
+      alert('Upload failed due to unexpected error.');
     }
-  };
+
+  } else {
+    try {
+      console.log("[TEXT/LINK] Uploading data to backend...");
+      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+        files: [],
+        text,
+        link,
+      });
+
+      if (!response.data.code) {
+        console.error("[ERROR] No code returned from text/link upload.");
+        alert("Upload failed: No code received from server.");
+        return;
+      }
+
+      setCode(response.data.code);
+      console.log(`[SUCCESS] Text/Link upload complete. Code: ${response.data.code}`);
+
+      try {
+        console.log("[QR] Generating QR code...");
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        setQrImage(qrRes.data.qr);
+        console.log("[QR SUCCESS] QR code generated.");
+      } catch (qrErr) {
+        console.error("[ERROR] QR generation failed", qrErr);
+        alert("QR code generation failed.");
+      }
+
+    } catch (err) {
+      console.error('[ERROR] Text/Link upload failed:', err);
+      alert("Upload failed.");
+    }
+  }
+};
+
+
+
+
 
   return (
     <>
