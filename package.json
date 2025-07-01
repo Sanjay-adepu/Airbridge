@@ -17,6 +17,7 @@
     "jszip": "^3.10.1",
     "react-router-dom": "^7.5.0",
     "@supabase/supabase-js": "^2.50.2",
+    "firebase": "^11.10.0",
     "aws-sdk": "^2.1692.0"
   },
   "devDependencies": {
