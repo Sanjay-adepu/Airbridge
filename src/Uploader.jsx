@@ -1,11 +1,11 @@
-// UploadInterface.jsx
 import React, { useState } from 'react';
 import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-  
+
+// ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDPnLZEqngw4uL2v7N3b3F_f6UaOle1FmU",
   authDomain: "droplin-89156.firebaseapp.com",
@@ -28,107 +28,102 @@ const UploadInterface = () => {
   const [code, setCode] = useState('');
   const [qrImage, setQrImage] = useState('');
 
-  
-const handleSubmit = async () => {
-  console.log(`[START] Upload triggered - Type: ${selectedType}`);
+  const handleSubmit = async () => {
+    console.log(`[START] Upload triggered - Type: ${selectedType}`);
 
-  if (selectedType === 'files') {
-    if (files.length === 0) {
-      alert("❗ Please select at least one file.");
-      console.warn("No files selected.");
-      return;
-    }
+    if (selectedType === 'files') {
+      if (files.length === 0) {
+        alert("❗ Please select at least one file.");
+        console.warn("No files selected.");
+        return;
+      }
 
-    try {
-      const uploadedFiles = [];
+      try {
+        const uploadedFiles = [];
 
-      for (const file of files) {
-        try {
-          const path = `uploads/${Date.now()}-${file.name}`;
-          const fileRef = ref(storage, path);
+        for (const file of files) {
+          try {
+            const path = `uploads/${Date.now()}-${file.name}`;
+            const fileRef = ref(storage, path);
 
-          console.log(`[UPLOAD] Uploading file: ${file.name} → ${path}`);
-          await uploadBytes(fileRef, file);
-          const url = await getDownloadURL(fileRef);
-          console.log(`[UPLOAD SUCCESS] ${file.name} uploaded. URL: ${url}`);
+            console.log(`[UPLOAD] Uploading file: ${file.name} → ${path}`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            console.log(`[UPLOAD SUCCESS] ${file.name} uploaded. URL: ${url}`);
 
-          uploadedFiles.push({ name: file.name, type: file.type, url });
-        } catch (uploadErr) {
-          console.error(`[ERROR] Firebase upload failed for ${file.name}`, uploadErr);
-          alert(`Upload failed for file: ${file.name}`);
+            uploadedFiles.push({ name: file.name, type: file.type, url });
+          } catch (uploadErr) {
+            console.error(`[ERROR] Firebase upload failed for ${file.name}`, uploadErr);
+            alert(`Upload failed for file: ${file.name}`);
+            return;
+          }
+        }
+
+        console.log("[BACKEND] Sending uploaded file URLs to backend...");
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: uploadedFiles,
+          text: '',
+          link: '',
+        });
+
+        if (!response.data.code) {
+          console.error("[ERROR] Backend did not return a code");
+          alert("Upload failed: No code received from server");
           return;
         }
+
+        setCode(response.data.code);
+        console.log(`[SUCCESS] Upload complete. Code: ${response.data.code}`);
+
+        try {
+          console.log("[QR] Generating QR code...");
+          const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+          setQrImage(qrRes.data.qr);
+          console.log("[QR SUCCESS] QR code generated.");
+        } catch (qrErr) {
+          console.error("[ERROR] QR generation failed", qrErr);
+          alert("QR code generation failed.");
+        }
+
+      } catch (err) {
+        console.error('[ERROR] Overall file upload failed:', err);
+        alert('Upload failed due to unexpected error.');
       }
 
-      console.log("[BACKEND] Sending uploaded file URLs to backend...");
-      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-        files: uploadedFiles,
-        text: '',
-        link: '',
-      });
-
-      if (!response.data.code) {
-        console.error("[ERROR] Backend did not return a code");
-        alert("Upload failed: No code received from server");
-        return;
-      }
-
-      setCode(response.data.code);
-      console.log(`[SUCCESS] Upload complete. Code: ${response.data.code}`);
-
+    } else {
       try {
-        console.log("[QR] Generating QR code...");
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
-        setQrImage(qrRes.data.qr);
-        console.log("[QR SUCCESS] QR code generated.");
-      } catch (qrErr) {
-        console.error("[ERROR] QR generation failed", qrErr);
-        alert("QR code generation failed.");
-      }
+        console.log("[TEXT/LINK] Uploading data to backend...");
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: [],
+          text,
+          link,
+        });
 
-    } catch (err) {
-      console.error('[ERROR] Overall file upload failed:', err);
-      alert('Upload failed due to unexpected error.');
+        if (!response.data.code) {
+          console.error("[ERROR] No code returned from text/link upload.");
+          alert("Upload failed: No code received from server.");
+          return;
+        }
+
+        setCode(response.data.code);
+        console.log(`[SUCCESS] Text/Link upload complete. Code: ${response.data.code}`);
+
+        try {
+          console.log("[QR] Generating QR code...");
+          const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+          setQrImage(qrRes.data.qr);
+          console.log("[QR SUCCESS] QR code generated.");
+        } catch (qrErr) {
+          console.error("[ERROR] QR generation failed", qrErr);
+          alert("QR code generation failed.");
+        }
+
+      } catch (err) {
+        console.error('[ERROR] Text/Link upload failed:', err);
+        alert("Upload failed.");
+      }
     }
-
-  } else {
-    try {
-      console.log("[TEXT/LINK] Uploading data to backend...");
-      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-        files: [],
-        text,
-        link,
-      });
-
-      if (!response.data.code) {
-        console.error("[ERROR] No code returned from text/link upload.");
-        alert("Upload failed: No code received from server.");
-        return;
-      }
-
-      setCode(response.data.code);
-      console.log(`[SUCCESS] Text/Link upload complete. Code: ${response.data.code}`);
-
-      try {
-        console.log("[QR] Generating QR code...");
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
-        setQrImage(qrRes.data.qr);
-        console.log("[QR SUCCESS] QR code generated.");
-      } catch (qrErr) {
-        console.error("[ERROR] QR generation failed", qrErr);
-        alert("QR code generation failed.");
-      }
-
-    } catch (err) {
-      console.error('[ERROR] Text/Link upload failed:', err);
-      alert("Upload failed.");
-    }
-  }
-};
-
-
-
-
+  };
 
   return (
     <>
