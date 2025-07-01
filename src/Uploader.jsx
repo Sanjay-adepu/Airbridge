@@ -2,13 +2,6 @@ import React, { useState } from 'react';
 import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
 import axios from 'axios';
-import { createClient } from '@supabase/supabase-js';
- 
-// ✅ Supabase credentials
-const supabase = createClient(
-  'https://ahqwlfgoxmepucldmpyc.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocXdsZmdveG1lcHVjbGRtcHljIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTE3MDQ4OCwiZXhwIjoyMDY2NzQ2NDg4fQ.5jRexF8EgyBcg4kv5Z7mgypOeE3NPcVVskN7_LcTQL4'
-);
 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
@@ -27,19 +20,25 @@ const UploadInterface = () => {
         const uploadedFiles = [];
 
         for (const file of files) {
-          const path = `uploads/${Date.now()}-${file.name}`;
-          const { error } = await supabase.storage
-            .from('uploads')
-            .upload(path, file, {
-              cacheControl: '3600',
-              contentType: file.type,
-              upsert: true,
-            });
+          // 🔁 Step 1: Get upload URL from backend
+          const getUrlRes = await axios.post('https://airbridge-backend.vercel.app/b2-get-upload-url', {
+            fileName: file.name,
+            contentType: file.type
+          });
 
-          if (error) throw error;
+          const { uploadUrl, authorizationToken, finalUrl } = getUrlRes.data;
 
-          const { data } = supabase.storage.from('uploads').getPublicUrl(path);
-          uploadedFiles.push({ name: file.name, type: file.type, url: data.publicUrl });
+          // 🔁 Step 2: Upload file to Backblaze B2 directly
+          await axios.post(uploadUrl, file, {
+            headers: {
+              Authorization: authorizationToken,
+              'Content-Type': file.type,
+              'X-Bz-File-Name': encodeURIComponent(file.name),
+              'X-Bz-Content-Sha1': 'do_not_verify'
+            }
+          });
+
+          uploadedFiles.push({ name: file.name, type: file.type, url: finalUrl });
         }
 
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
@@ -58,7 +57,6 @@ const UploadInterface = () => {
         alert('Upload failed');
       }
     } else {
-      // Upload text or link
       try {
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
           files: [],
