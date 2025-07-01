@@ -1,7 +1,23 @@
+// UploadInterface.jsx
 import React, { useState } from 'react';
 import './Upload.css';
 import Navbar from "./Navbar/Navbar.jsx";
 import axios from 'axios';
+import { initializeApp } from 'firebase/app';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDPnLZEqngw4uL2v7N3b3F_f6UaOle1FmU",
+  authDomain: "droplin-89156.firebaseapp.com",
+  projectId: "droplin-89156",
+  storageBucket: "droplin-89156.appspot.com",
+  messagingSenderId: "905562259282",
+  appId: "1:905562259282:web:7947afd2186ad9bf04448b",
+  measurementId: "G-39H9DC93B6"
+};
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
@@ -20,25 +36,11 @@ const UploadInterface = () => {
         const uploadedFiles = [];
 
         for (const file of files) {
-          // 🔁 Step 1: Get upload URL from backend
-          const getUrlRes = await axios.post('https://airbridge-backend.vercel.app/b2-get-upload-url', {
-            fileName: file.name,
-            contentType: file.type
-          });
-
-          const { uploadUrl, authorizationToken, finalUrl } = getUrlRes.data;
-
-          // 🔁 Step 2: Upload file to Backblaze B2 directly
-          await axios.post(uploadUrl, file, {
-            headers: {
-              Authorization: authorizationToken,
-              'Content-Type': file.type,
-              'X-Bz-File-Name': encodeURIComponent(file.name),
-              'X-Bz-Content-Sha1': 'do_not_verify'
-            }
-          });
-
-          uploadedFiles.push({ name: file.name, type: file.type, url: finalUrl });
+          const path = `uploads/${Date.now()}-${file.name}`;
+          const fileRef = ref(storage, path);
+          await uploadBytes(fileRef, file);
+          const url = await getDownloadURL(fileRef);
+          uploadedFiles.push({ name: file.name, type: file.type, url });
         }
 
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
@@ -48,7 +50,6 @@ const UploadInterface = () => {
         });
 
         setCode(response.data.code);
-
         const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
         setQrImage(qrRes.data.qr);
 
@@ -56,6 +57,7 @@ const UploadInterface = () => {
         console.error('Upload failed:', err);
         alert('Upload failed');
       }
+
     } else {
       try {
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
@@ -65,7 +67,6 @@ const UploadInterface = () => {
         });
 
         setCode(response.data.code);
-
         const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
         setQrImage(qrRes.data.qr);
 
@@ -84,23 +85,19 @@ const UploadInterface = () => {
           <h2>How to Upload</h2>
           <p>
             1. Select the type of data you want to upload: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
-            2. Based on your selection, provide the required input and click <strong>Submit</strong>.
+            2. Provide the input and click <strong>Submit</strong>.
           </p>
           <p className="file-info">
             <strong>File Upload Info:</strong><br />
-            - You can select <strong>multiple files</strong> or an entire <strong>folder</strong>.<br />
-            - Supported types: <strong>Images, PDFs, PPTs, Word Docs, MP3s, MP4s, APKs</strong>, and more.
+            - You can select <strong>multiple files</strong> or a <strong>folder</strong>.<br />
+            - Supported types: Images, PDFs, MP4s, APKs, etc.
           </p>
           <hr />
         </div>
 
         <div className="option-container">
           {['files', 'text', 'link'].map((type) => (
-            <button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              className={`option-btn ${selectedType === type ? 'active' : ''}`}
-            >
+            <button key={type} onClick={() => setSelectedType(type)} className={`option-btn ${selectedType === type ? 'active' : ''}`}>
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
           ))}
@@ -111,21 +108,11 @@ const UploadInterface = () => {
             <div className="file-upload-mode">
               <div className="toggle-mode">
                 <label>
-                  <input
-                    type="radio"
-                    value="files"
-                    checked={fileInputMode === 'files'}
-                    onChange={() => setFileInputMode('files')}
-                  />
+                  <input type="radio" value="files" checked={fileInputMode === 'files'} onChange={() => setFileInputMode('files')} />
                   Select Files
                 </label>
                 <label>
-                  <input
-                    type="radio"
-                    value="folder"
-                    checked={fileInputMode === 'folder'}
-                    onChange={() => setFileInputMode('folder')}
-                  />
+                  <input type="radio" value="folder" checked={fileInputMode === 'folder'} onChange={() => setFileInputMode('folder')} />
                   Select Folder
                 </label>
               </div>
@@ -161,20 +148,13 @@ const UploadInterface = () => {
           )}
         </div>
 
-        <button onClick={handleSubmit} className="submit-btn">
-          Submit
-        </button>
+        <button onClick={handleSubmit} className="submit-btn">Submit</button>
 
         {code && (
           <div className="result-container">
             <h3>Generated Code:</h3>
             <p>{code}</p>
-            <a
-              href={`https://airbridge-backend.vercel.app/download/${code}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="download-link"
-            >
+            <a href={`https://airbridge-backend.vercel.app/download/${code}`} target="_blank" rel="noopener noreferrer" className="download-link">
               Download Files
             </a>
             {qrImage && (
