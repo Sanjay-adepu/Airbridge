@@ -5,7 +5,7 @@ import Navbar from "./Navbar/Navbar.jsx";
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
+  
 const firebaseConfig = {
   apiKey: "AIzaSyDPnLZEqngw4uL2v7N3b3F_f6UaOle1FmU",
   authDomain: "droplin-89156.firebaseapp.com",
