@@ -13,72 +13,94 @@ const UploadInterface = () => {
   const [qrImage, setQrImage] = useState('');
 
   const handleSubmit = async () => {
-    if (selectedType === 'files') {
-      if (files.length === 0) return alert("Please select at least one file.");
+  console.log("🟡 Upload started for:", selectedType);
 
-      try {
-        const uploadedFiles = [];
-
-        for (const file of files) {
-          const formData = new FormData();
-          formData.append('file', file);
-
-          const response = await axios.post('https://temp.sh/', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          }).catch((err) => {
-            console.error('Temp.sh upload error:', err.response?.data || err.message);
-            throw new Error("Temp.sh upload failed");
-          });
-
-          let fileUrl = response.data;
-          if (typeof fileUrl !== 'string') {
-            fileUrl = fileUrl.toString();
-          }
-          fileUrl = fileUrl.trim();
-
-          uploadedFiles.push({
-            name: file.name,
-            type: file.type,
-            url: fileUrl
-          });
-        }
-
-        const uploadRes = await axios.post('https://airbridge-backend.vercel.app/upload', {
-          files: uploadedFiles,
-          text: '',
-          link: ''
-        });
-
-        setCode(uploadRes.data.code);
-
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${uploadRes.data.code}`);
-        setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Upload failed:', err);
-        alert('Upload failed');
-      }
-
-    } else {
-      // Text or link upload
-      try {
-        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-          files: [],
-          text,
-          link,
-        });
-
-        setCode(response.data.code);
-
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
-        setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Text/Link upload failed:', err);
-        alert("Upload failed");
-      }
+  if (selectedType === 'files') {
+    if (files.length === 0) {
+      alert("❗ Please select at least one file.");
+      return;
     }
-  };
+
+    try {
+      const uploadedFiles = [];
+
+      for (const file of files) {
+        console.log("📁 Uploading file to temp.sh:", file.name);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await axios.post('https://temp.sh/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }).catch((err) => {
+          console.error('❌ Temp.sh upload error:', err.response?.data || err.message);
+          alert(`Temp.sh upload failed for: ${file.name}`);
+          throw err;
+        });
+
+        let fileUrl = response.data;
+        if (typeof fileUrl !== 'string') {
+          fileUrl = fileUrl.toString();
+        }
+        fileUrl = fileUrl.trim();
+
+        console.log("✅ File uploaded to Temp.sh:", fileUrl);
+
+        uploadedFiles.push({
+          name: file.name,
+          type: file.type,
+          url: fileUrl
+        });
+      }
+
+      console.log("📦 Sending metadata to backend:", uploadedFiles);
+
+      const uploadRes = await axios.post('https://airbridge-backend.vercel.app/upload', {
+        files: uploadedFiles,
+        text: '',
+        link: ''
+      });
+
+      console.log("✅ Backend response:", uploadRes.data);
+      setCode(uploadRes.data.code);
+
+      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${uploadRes.data.code}`);
+      console.log("🖼️ QR code generated");
+      setQrImage(qrRes.data.qr);
+
+      alert("✅ Upload and QR generation successful");
+
+    } catch (err) {
+      console.error('❌ Upload failed:', err);
+      alert('Upload failed: ' + err.message);
+    }
+
+  } else {
+    // Uploading text or link
+    console.log("📝 Uploading text/link...");
+
+    try {
+      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+        files: [],
+        text,
+        link,
+      });
+
+      console.log("✅ Text/Link stored:", response.data);
+      setCode(response.data.code);
+
+      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+      setQrImage(qrRes.data.qr);
+
+      alert("✅ Text/Link uploaded successfully");
+
+    } catch (err) {
+      console.error('❌ Text/Link upload failed:', err);
+      alert("Upload failed: " + err.message);
+    }
+  }
+};
+
+
 
   return (
     <>
