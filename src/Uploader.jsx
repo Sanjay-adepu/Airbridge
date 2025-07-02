@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import './Upload.css';
-import Navbar from "./Navbar/Navbar.jsx";
+import Navbar from "./Navbar/Navbar";
 import axios from 'axios';
+import { Client, Storage, ID } from 'appwrite';
 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
@@ -12,95 +13,70 @@ const UploadInterface = () => {
   const [code, setCode] = useState('');
   const [qrImage, setQrImage] = useState('');
 
+  const client = new Client()
+    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+    .setProject('68652aa600367167ca15');
+
+  const storage = new Storage(client);
+
   const handleSubmit = async () => {
-  console.log("🟡 Upload started for:", selectedType);
+    if (selectedType === 'files') {
+      if (files.length === 0) return alert("Please select at least one file.");
 
-  if (selectedType === 'files') {
-    if (files.length === 0) {
-      alert("❗ Please select at least one file.");
-      return;
-    }
+      try {
+        const uploadedFiles = [];
 
-    try {
-      const uploadedFiles = [];
+        for (const file of files) {
+          const uniqueId = ID.unique();
+          const result = await storage.createFile(
+            '6865306c0007bdcc08f0', // Bucket ID
+            uniqueId,
+            file
+          );
 
-      for (const file of files) {
-        console.log("📁 Uploading file to temp.sh:", file.name);
-        const formData = new FormData();
-        formData.append('file', file);
+          const previewUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/6865306c0007bdcc08f0/files/${result.$id}/view?project=68652aa600367167ca15`;
 
-        const response = await axios.post('https://temp.sh/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }).catch((err) => {
-          console.error('❌ Temp.sh upload error:', err.response?.data || err.message);
-          alert(`Temp.sh upload failed for: ${file.name}`);
-          throw err;
-        });
-
-        let fileUrl = response.data;
-        if (typeof fileUrl !== 'string') {
-          fileUrl = fileUrl.toString();
+          uploadedFiles.push({
+            name: file.name,
+            type: file.type,
+            url: previewUrl
+          });
         }
-        fileUrl = fileUrl.trim();
 
-        console.log("✅ File uploaded to Temp.sh:", fileUrl);
-
-        uploadedFiles.push({
-          name: file.name,
-          type: file.type,
-          url: fileUrl
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: uploadedFiles,
+          text: '',
+          link: '',
         });
+
+        setCode(response.data.code);
+
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        setQrImage(qrRes.data.qr);
+
+      } catch (err) {
+        console.error('Appwrite upload failed:', err);
+        alert('Upload failed');
       }
+    } else {
+      try {
+        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
+          files: [],
+          text,
+          link,
+        });
 
-      console.log("📦 Sending metadata to backend:", uploadedFiles);
+        setCode(response.data.code);
 
-      const uploadRes = await axios.post('https://airbridge-backend.vercel.app/upload', {
-        files: uploadedFiles,
-        text: '',
-        link: ''
-      });
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        setQrImage(qrRes.data.qr);
 
-      console.log("✅ Backend response:", uploadRes.data);
-      setCode(uploadRes.data.code);
-
-      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${uploadRes.data.code}`);
-      console.log("🖼️ QR code generated");
-      setQrImage(qrRes.data.qr);
-
-      alert("✅ Upload and QR generation successful");
-
-    } catch (err) {
-      console.error('❌ Upload failed:', err);
-      alert('Upload failed: ' + err.message);
+      } catch (err) {
+        console.error('Text/Link upload failed:', err);
+        alert("Upload failed");
+      }
     }
-
-  } else {
-    // Uploading text or link
-    console.log("📝 Uploading text/link...");
-
-    try {
-      const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-        files: [],
-        text,
-        link,
-      });
-
-      console.log("✅ Text/Link stored:", response.data);
-      setCode(response.data.code);
-
-      const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
-      setQrImage(qrRes.data.qr);
-
-      alert("✅ Text/Link uploaded successfully");
-
-    } catch (err) {
-      console.error('❌ Text/Link upload failed:', err);
-      alert("Upload failed: " + err.message);
-    }
-  }
-};
-
-
+  };
 
   return (
     <>
@@ -109,20 +85,18 @@ const UploadInterface = () => {
         <div className="instructions">
           <h2>How to Upload</h2>
           <p>
-            1. Select the type: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
-            2. Provide input and click <strong>Submit</strong>.
+            1. Select <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
+            2. Click <strong>Submit</strong> to generate a code and QR.
           </p>
           <p className="file-info">
             <strong>File Info:</strong><br />
-            - Select <strong>multiple files</strong> or <strong>folder</strong>.<br />
-            - Types: Images, PDFs, Videos, APKs, etc.<br />
-            - Max: ~2GB per file
+            Multiple files, folders, formats: images, PDFs, videos, APKs, etc.
           </p>
           <hr />
         </div>
 
         <div className="option-container">
-          {['files', 'text', 'link'].map(type => (
+          {['files', 'text', 'link'].map((type) => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -143,7 +117,8 @@ const UploadInterface = () => {
                     value="files"
                     checked={fileInputMode === 'files'}
                     onChange={() => setFileInputMode('files')}
-                  /> Select Files
+                  />
+                  Select Files
                 </label>
                 <label>
                   <input
@@ -151,9 +126,11 @@ const UploadInterface = () => {
                     value="folder"
                     checked={fileInputMode === 'folder'}
                     onChange={() => setFileInputMode('folder')}
-                  /> Select Folder
+                  />
+                  Select Folder
                 </label>
               </div>
+
               <input
                 type="file"
                 multiple
@@ -185,7 +162,9 @@ const UploadInterface = () => {
           )}
         </div>
 
-        <button onClick={handleSubmit} className="submit-btn">Submit</button>
+        <button onClick={handleSubmit} className="submit-btn">
+          Submit
+        </button>
 
         {code && (
           <div className="result-container">
