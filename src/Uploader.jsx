@@ -21,15 +21,12 @@ const UploadInterface = () => {
         files.forEach(file => {
           formData.append('files', file);
         });
+        formData.append('text', text);
+        formData.append('link', link);
 
         const response = await axios.post(
           'https://airbridge-backend.vercel.app/upload',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
+          formData
         );
 
         const sessionCode = response.data.code;
@@ -38,7 +35,6 @@ const UploadInterface = () => {
         const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${sessionCode}`);
         setQrImage(qrRes.data.qr);
       } else {
-        // Handle text or link uploads
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
           files: [],
           text,
@@ -51,7 +47,7 @@ const UploadInterface = () => {
       }
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Upload failed');
+      alert(err.response?.data?.message || 'Upload failed');
     }
   };
 
@@ -62,25 +58,20 @@ const UploadInterface = () => {
         <div className="instructions">
           <h2>How to Upload</h2>
           <p>
-            1. Select the type of data you want to upload: <strong>Files</strong>,{' '}
-            <strong>Text</strong>, or <strong>Link</strong>.
-            <br />
+            1. Select the type of data you want to upload: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
             2. Provide the input and click <strong>Submit</strong>.
           </p>
           <p className="file-info">
-            <strong>File Upload Info:</strong>
-            <br />
-            - You can select <strong>multiple files</strong> or an entire <strong>folder</strong>.
-            <br />
-            - Supported: PDFs, PPTs, MP4s, DOCs, ZIPs, APKs, etc.
-            <br />
-            - Files auto-delete after 2 minutes.
+            <strong>File Upload Info:</strong><br />
+            - Select <strong>multiple files</strong> or a <strong>folder</strong>.<br />
+            - Supported: PDFs, PPTs, DOCs, MP4s, ZIPs, APKs, etc.<br />
+            - Auto-delete after 2 minutes.
           </p>
           <hr />
         </div>
 
         <div className="option-container">
-          {['files', 'text', 'link'].map((type) => (
+          {['files', 'text', 'link'].map(type => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -145,9 +136,7 @@ const UploadInterface = () => {
           )}
         </div>
 
-        <button onClick={handleSubmit} className="submit-btn">
-          Submit
-        </button>
+        <button onClick={handleSubmit} className="submit-btn">Submit</button>
 
         {code && (
           <div className="result-container">
