@@ -18,6 +18,7 @@
     "react-router-dom": "^7.5.0",
     "@supabase/supabase-js": "^2.50.2",
     "firebase": "^11.10.0",
+    "appwrite": "^18.1.1",
     "aws-sdk": "^2.1692.0"
   },
   "devDependencies": {
