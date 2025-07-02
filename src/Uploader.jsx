@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import './Upload.css';
-import Navbar from "./Navbar/Navbar";
+import Navbar from './Navbar/Navbar.jsx';
 import axios from 'axios';
-import { Client, Storage, ID } from 'appwrite';
- 
+
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
   const [fileInputMode, setFileInputMode] = useState('files');
@@ -13,53 +12,33 @@ const UploadInterface = () => {
   const [code, setCode] = useState('');
   const [qrImage, setQrImage] = useState('');
 
-  const client = new Client()
-    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-    .setProject('68652aa600367167ca15');
-
-  const storage = new Storage(client);
-
   const handleSubmit = async () => {
-    if (selectedType === 'files') {
-      if (files.length === 0) return alert("Please select at least one file.");
+    try {
+      if (selectedType === 'files') {
+        if (files.length === 0) return alert('Please select at least one file.');
 
-      try {
-        const uploadedFiles = [];
-
-        for (const file of files) {
-          const uniqueId = ID.unique();
-          const result = await storage.createFile(
-            '6865306c0007bdcc08f0', // Bucket ID
-            uniqueId,
-            file
-          );
-
-          const previewUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/6865306c0007bdcc08f0/files/${result.$id}/view?project=68652aa600367167ca15`;
-
-          uploadedFiles.push({
-            name: file.name,
-            type: file.type,
-            url: previewUrl
-          });
-        }
-
-        const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
-          files: uploadedFiles,
-          text: '',
-          link: '',
+        const formData = new FormData();
+        files.forEach(file => {
+          formData.append('files', file);
         });
 
-        setCode(response.data.code);
+        const response = await axios.post(
+          'https://airbridge-backend.vercel.app/upload',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
 
-        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
+        const sessionCode = response.data.code;
+        setCode(sessionCode);
+
+        const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${sessionCode}`);
         setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Appwrite upload failed:', err);
-        alert('Upload failed');
-      }
-    } else {
-      try {
+      } else {
+        // Handle text or link uploads
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
           files: [],
           text,
@@ -67,14 +46,12 @@ const UploadInterface = () => {
         });
 
         setCode(response.data.code);
-
         const qrRes = await axios.get(`https://airbridge-backend.vercel.app/qrcode/${response.data.code}`);
         setQrImage(qrRes.data.qr);
-
-      } catch (err) {
-        console.error('Text/Link upload failed:', err);
-        alert("Upload failed");
       }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Upload failed');
     }
   };
 
@@ -85,12 +62,19 @@ const UploadInterface = () => {
         <div className="instructions">
           <h2>How to Upload</h2>
           <p>
-            1. Select <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
-            2. Click <strong>Submit</strong> to generate a code and QR.
+            1. Select the type of data you want to upload: <strong>Files</strong>,{' '}
+            <strong>Text</strong>, or <strong>Link</strong>.
+            <br />
+            2. Provide the input and click <strong>Submit</strong>.
           </p>
           <p className="file-info">
-            <strong>File Info:</strong><br />
-            Multiple files, folders, formats: images, PDFs, videos, APKs, etc.
+            <strong>File Upload Info:</strong>
+            <br />
+            - You can select <strong>multiple files</strong> or an entire <strong>folder</strong>.
+            <br />
+            - Supported: PDFs, PPTs, MP4s, DOCs, ZIPs, APKs, etc.
+            <br />
+            - Files auto-delete after 2 minutes.
           </p>
           <hr />
         </div>
@@ -130,7 +114,6 @@ const UploadInterface = () => {
                   Select Folder
                 </label>
               </div>
-
               <input
                 type="file"
                 multiple
