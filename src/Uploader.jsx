@@ -3,7 +3,7 @@ import './Upload.css';
 import Navbar from "./Navbar/Navbar";
 import axios from 'axios';
 import { Client, Storage, ID } from 'appwrite';
-
+ 
 const UploadInterface = () => {
   const [selectedType, setSelectedType] = useState('files');
   const [fileInputMode, setFileInputMode] = useState('files');
