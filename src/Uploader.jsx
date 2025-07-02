@@ -15,6 +15,7 @@ const UploadInterface = () => {
   const handleSubmit = async () => {
     if (selectedType === 'files') {
       if (files.length === 0) return alert("Please select at least one file.");
+
       try {
         const uploadedFiles = [];
 
@@ -24,9 +25,17 @@ const UploadInterface = () => {
 
           const response = await axios.post('https://temp.sh/', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+          }).catch((err) => {
+            console.error('Temp.sh upload error:', err.response?.data || err.message);
+            throw new Error("Temp.sh upload failed");
           });
 
-          const fileUrl = response.data.trim();
+          let fileUrl = response.data;
+          if (typeof fileUrl !== 'string') {
+            fileUrl = fileUrl.toString();
+          }
+          fileUrl = fileUrl.trim();
+
           uploadedFiles.push({
             name: file.name,
             type: file.type,
@@ -51,7 +60,7 @@ const UploadInterface = () => {
       }
 
     } else {
-      // Upload text or link
+      // Text or link upload
       try {
         const response = await axios.post('https://airbridge-backend.vercel.app/upload', {
           files: [],
@@ -78,13 +87,13 @@ const UploadInterface = () => {
         <div className="instructions">
           <h2>How to Upload</h2>
           <p>
-            1. Select the type of data you want to upload: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
+            1. Select the type: <strong>Files</strong>, <strong>Text</strong>, or <strong>Link</strong>.<br />
             2. Provide input and click <strong>Submit</strong>.
           </p>
           <p className="file-info">
-            <strong>File Upload Info:</strong><br />
-            - Supports <strong>multiple files</strong> or a <strong>folder</strong>.<br />
-            - Types: Images, PDFs, MP3s, MP4s, APKs, etc.<br />
+            <strong>File Info:</strong><br />
+            - Select <strong>multiple files</strong> or <strong>folder</strong>.<br />
+            - Types: Images, PDFs, Videos, APKs, etc.<br />
             - Max: ~2GB per file
           </p>
           <hr />
