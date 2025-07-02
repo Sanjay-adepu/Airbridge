@@ -24,6 +24,7 @@ const UploadInterface = () => {
         formData.append('text', text);
         formData.append('link', link);
 
+        // ✅ Let axios handle headers
         const response = await axios.post(
           'https://airbridge-backend.vercel.app/upload',
           formData
@@ -47,6 +48,7 @@ const UploadInterface = () => {
       }
     } catch (err) {
       console.error('Upload failed:', err);
+      console.log('Backend response:', err.response?.data);
       alert(err.response?.data?.message || 'Upload failed');
     }
   };
